@@ -21,6 +21,7 @@ def rename_cols(old_col_list, new_col_names):
             if percentage < 40 and new_col_names[-1] == val2:
                 li.append(str(val1) + ' (Extra Column)')
                 break
+    print(li)
     return li
 
 def substring_in_list(string, list):

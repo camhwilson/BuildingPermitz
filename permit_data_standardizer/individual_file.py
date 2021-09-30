@@ -25,82 +25,35 @@ def extract(filepath):
     condition = False
     i = 0
     
-    while condition == False:
-        
-        search_list = temp_df.iloc[:100,i].tolist()
-        if substring_in_list('Permits Issued By Day', search_list):
-            datatype = 2
-            condition = True
-            break
-        if substring_in_list('PERMITNUMBER', search_list):
-            datatype = 4
-            condition = True
-            break
-
-        if substring_in_list('Issue ', search_list):
-            datatype = 1
-            condition = True
-            break
-        if substring_in_list('Permit ', search_list):
-            shifted_search_list = temp_df.iloc[:20,i+1].tolist()
-            if substring_in_list('Ward', shifted_search_list):
-                datatype = 2
-                condition = True
-                break
-            if substring_in_list('Date', shifted_search_list):
-                datatype = 4
-                condition = True
-                break
-        if substring_in_list('Updated', search_list):
-            datatype = 3
-            condition = True
-            break
-        i+=1
-    #print('Data Type Detected: ' + str(datatype))
-
     #standard column list
     new_list = ['Issue Date', 'Permit No.', 'Ward', 'Parcel', 'Address', 'Owner','Contractor', 'Work Description', 'Cost']
 
-
-    if datatype == 1:
-        dshift = determine_rowshift(temp_df, 'Date')
+    while True:
         
-        temp_df.columns = temp_df.iloc[dshift]
-        temp_df = temp_df[dshift+1:]
-        #no need to rename columns
-        #no need to reorder columns
-        return df_tolist13(temp_df)
-        
+        search_list = temp_df.iloc[:100,i].tolist()
+        if substring_in_list('Permits Issued By Day', search_list):
+            return process_dtype2(temp_df, new_list)
+        if substring_in_list('PERMITNUMBER', search_list):
+            datatype = 4
+            break
 
-    if datatype == 2:
-        dshift = determine_rowshift(temp_df, 'Permit ')
-        rshift = determine_colshift(temp_df, 'Permit ')
-        first_date = temp_df.iloc[dshift-1, rshift]
+        if substring_in_list('Issue ', search_list):
+            process_dtype1(temp_df)
 
-        temp_df.columns = temp_df.iloc[dshift]
-        temp_df = temp_df[dshift+1:]
-        
-        existing_columns = temp_df.columns.tolist()
-        new_col_list = rename_cols(existing_columns, new_list)
-        renaming_dict = dict(zip(existing_columns, new_col_list))
-        temp_df = temp_df.rename(columns=renaming_dict)
+        if substring_in_list('Permit ', search_list):
+            shifted_search_list = temp_df.iloc[:20,i+1].tolist()
+            if substring_in_list('Ward', shifted_search_list):
+                return process_dtype2(temp_df, new_list)
 
-        return df_tolist2(temp_df, first_date, new_list)
+            if substring_in_list('Date', shifted_search_list):
+                datatype = 4
+                break
+        if substring_in_list('Updated', search_list):
+            #datatype 3
+            return process_dtype3(temp_df, new_list)
+        i+=1
 
-    if datatype == 3:
-        dshift = determine_rowshift(temp_df, 'DATE')
-        temp_df.columns = temp_df.iloc[dshift]
-        temp_df = temp_df[dshift+1:]
-        #renamed columns
-        existing_columns = temp_df.columns.tolist()
-        new_col_list = rename_cols(existing_columns, new_list)
-        renaming_dict = dict(zip(existing_columns, new_col_list))
-        temp_df = temp_df.rename(columns=renaming_dict)
-        
-        return df_tolist13(temp_df)
-        
-        #no need to reorder columns
-      
+
     if datatype == 4:
         dshift = determine_rowshift(temp_df, 'PERMIT')
         temp_df.columns = temp_df.iloc[dshift]
@@ -127,3 +80,40 @@ def extract(filepath):
 
         return df_tolist4(temp_df)
 
+
+def process_dtype1(temp_df):
+    dshift = determine_rowshift(temp_df, 'Date')
+    
+    temp_df.columns = temp_df.iloc[dshift]
+    temp_df = temp_df[dshift+1:]
+    #no need to rename columns
+    #no need to reorder columns
+    return df_tolist13(temp_df)
+
+
+
+def process_dtype3(temp_df, new_list):
+    dshift = determine_rowshift(temp_df, 'DATE')
+    temp_df.columns = temp_df.iloc[dshift]
+    temp_df = temp_df[dshift+1:]
+    #renamed columns
+    existing_columns = temp_df.columns.tolist()
+    new_col_list = rename_cols(existing_columns, new_list)
+    renaming_dict = dict(zip(existing_columns, new_col_list))
+    temp_df = temp_df.rename(columns=renaming_dict)
+    #no need to reorder columns
+    return df_tolist13(temp_df)
+
+def process_dtype2(temp_df, new_list):
+    dshift = determine_rowshift(temp_df, 'Permit ')
+    rshift = determine_colshift(temp_df, 'Permit ')
+    first_date = temp_df.iloc[dshift-1, rshift]
+    temp_df.columns = temp_df.iloc[dshift]
+    temp_df = temp_df[dshift+1:]
+    
+    existing_columns = temp_df.columns.tolist()
+    new_col_list = rename_cols(existing_columns, new_list)
+    renaming_dict = dict(zip(existing_columns, new_col_list))
+    temp_df = temp_df.rename(columns=renaming_dict)
+
+    return df_tolist2(temp_df, first_date, new_list)

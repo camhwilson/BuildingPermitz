@@ -31,7 +31,7 @@ def preform_iteration(target_folder, new_csvname):
 
 
 start_time = time.time()
-preform_iteration('Market Database','Dataset_7_11.csv')
+preform_iteration('permit_data_standardizer/Market Database','consolidated_dataset.csv')
 print()
 print('No Errors Detected')
 print('Total Run Time: '+str(round((time.time() - start_time), 2))+'s')
